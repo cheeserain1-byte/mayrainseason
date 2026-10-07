@@ -1,0 +1,1407 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>梅雨季 · Plum Rain Season</title>
+<style>
+*,*::before,*::after{box-sizing:border-box}
+:root{
+  --plum:#6B4E5E;--plum-deep:#463039;--rose:#D9A7A7;
+  --gold:#C4A265;--gold-soft:rgba(196,162,101,.28);
+  --ink:#3D3138;--ink-soft:#8E7E86;
+  --glass:rgba(255,255,255,.68);
+  --shadow:0 10px 34px rgba(107,78,94,.09);
+  --radius:22px;
+}
+html,body{margin:0;padding:0;min-height:100%}
+body{
+  font-family:"Cormorant Garamond","Songti SC","STSong","Noto Serif SC",Georgia,serif;
+  color:var(--ink);background:transparent;-webkit-font-smoothing:antialiased;overflow-x:hidden;
+}
+body::before{
+  content:'';position:fixed;inset:0;z-index:-2;
+  background:
+    radial-gradient(circle at 12% 8%, rgba(217,167,167,.22), transparent 42%),
+    radial-gradient(circle at 88% 12%, rgba(168,184,208,.20), transparent 42%),
+    radial-gradient(circle at 50% 108%, rgba(196,162,101,.16), transparent 55%),
+    linear-gradient(180deg,#FDFAF6 0%,#F8F1EC 55%,#F5EDE9 100%);
+}
+body::after{
+  content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.35;
+  background-image:repeating-linear-gradient(45deg, rgba(196,162,101,.045) 0 1px, transparent 1px 7px);
+}
+#rain{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+.app{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column}
+
+.topbar{
+  position:sticky;top:0;z-index:60;
+  display:flex;align-items:center;justify-content:space-between;gap:20px;
+  padding:16px 40px;
+  background:rgba(253,249,245,.72);
+  backdrop-filter:blur(18px) saturate(1.2);-webkit-backdrop-filter:blur(18px) saturate(1.2);
+  border-bottom:1px solid var(--gold-soft);
+  box-shadow:0 1px 0 rgba(255,255,255,.8) inset, 0 6px 24px rgba(107,78,94,.05);
+}
+.brand{display:flex;align-items:baseline;gap:14px}
+.brand h1{margin:0;font-size:25px;font-weight:600;letter-spacing:.32em;color:var(--plum-deep);text-shadow:0 1px 0 #fff}
+.brand .en{font-size:11px;letter-spacing:.34em;text-transform:uppercase;color:var(--gold);opacity:.9}
+.brand .mark{color:var(--gold);font-size:15px;transform:translateY(-2px)}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.sync-badge{
+  display:flex;align-items:center;gap:7px;cursor:pointer;
+  font-size:11px;letter-spacing:.16em;color:var(--ink-soft);
+  padding:5px 12px;border-radius:999px;
+  border:1px solid var(--gold-soft);background:rgba(255,255,255,.6);
+  transition:.25s;user-select:none;
+}
+.sync-badge:hover{background:#fff;border-color:var(--gold)}
+.sync-badge .dot{
+  width:6px;height:6px;border-radius:50%;background:#A8C4A0;
+  box-shadow:0 0 6px rgba(168,196,160,.9);transition:.3s;
+}
+.sync-badge.local .dot{background:#D9B87E;box-shadow:0 0 6px rgba(217,184,126,.9)}
+.sync-badge.syncing .dot{background:#C9A275;animation:pulse 1s infinite}
+.sync-badge.error .dot{background:#D98888;box-shadow:0 0 6px rgba(217,136,136,.9)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+.layout{
+  flex:1;display:grid;grid-template-columns:326px minmax(0,1fr);gap:26px;
+  width:100%;max-width:1320px;margin:0 auto;padding:28px 40px 90px;
+}
+.sidebar{display:flex;flex-direction:column;gap:18px}
+.main{min-width:0;display:flex;flex-direction:column;gap:20px}
+
+.card{
+  position:relative;background:var(--glass);
+  backdrop-filter:blur(16px) saturate(1.15);-webkit-backdrop-filter:blur(16px) saturate(1.15);
+  border:1px solid var(--gold-soft);border-radius:var(--radius);
+  box-shadow:var(--shadow), inset 0 1px 0 rgba(255,255,255,.9);
+}
+.card.corner::before,.card.corner::after{
+  content:'';position:absolute;width:15px;height:15px;pointer-events:none;
+  border:1px solid rgba(196,162,101,.5);
+}
+.card.corner::before{top:7px;left:7px;border-right:0;border-bottom:0;border-radius:8px 0 0 0}
+.card.corner::after{bottom:7px;right:7px;border-left:0;border-top:0;border-radius:0 0 8px 0}
+
+.person{display:flex;align-items:center;gap:14px;padding:18px 18px 18px 20px;transition:.28s cubic-bezier(.2,.8,.3,1)}
+.person:hover{transform:translateY(-2px);box-shadow:0 16px 40px rgba(107,78,94,.13), inset 0 1px 0 #fff}
+.avatar{
+  position:relative;flex:0 0 auto;width:58px;height:58px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;color:#fff;overflow:hidden;
+  border:1px solid rgba(255,255,255,.9);
+  box-shadow:0 0 0 1px var(--gold-soft), 0 6px 16px rgba(107,78,94,.14);
+}
+.avatar.A{background:linear-gradient(145deg,#E5B9BC,#C79BAE)}
+.avatar.B{background:linear-gradient(145deg,#B9C7DE,#98A8C6)}
+.avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.person-body{min-width:0;flex:1}
+.person-top{display:flex;align-items:center;gap:8px}
+.person-top h3{margin:0;font-size:17px;font-weight:600;letter-spacing:.08em;color:var(--plum-deep)}
+.role{font-size:10px;letter-spacing:.14em;padding:2px 7px;border-radius:20px;color:var(--gold);border:1px solid var(--gold-soft);background:rgba(255,255,255,.6)}
+.status{margin:6px 0 0;font-size:13.5px;color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.icon-btn{
+  flex:0 0 auto;width:30px;height:30px;border-radius:50%;
+  border:1px solid var(--gold-soft);background:rgba(255,255,255,.7);
+  color:var(--gold);cursor:pointer;font-size:13px;line-height:1;
+  transition:.2s;display:flex;align-items:center;justify-content:center;
+}
+.icon-btn:hover{background:var(--gold);color:#fff;border-color:var(--gold)}
+
+.quote-card{padding:18px 22px;font-size:13px;line-height:2;letter-spacing:.14em;color:var(--ink-soft);font-style:italic;text-align:center}
+.quote-card .sep{display:block;color:var(--gold);font-size:10px;margin:8px 0 4px;letter-spacing:.5em}
+
+.tabs{
+  display:flex;gap:6px;padding:6px;background:rgba(255,255,255,.6);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border:1px solid var(--gold-soft);border-radius:999px;
+  box-shadow:var(--shadow), inset 0 1px 0 rgba(255,255,255,.9);
+  align-self:flex-start;
+}
+.tab{
+  border:0;background:transparent;cursor:pointer;font-family:inherit;
+  font-size:14.5px;letter-spacing:.2em;color:var(--ink-soft);
+  padding:10px 26px;border-radius:999px;transition:.28s cubic-bezier(.2,.8,.3,1);
+}
+.tab:hover{color:var(--plum)}
+.tab.active{color:#fff;background:linear-gradient(140deg,#C9A275,#B98CA0);box-shadow:0 6px 18px rgba(185,140,160,.35), inset 0 1px 0 rgba(255,255,255,.4)}
+
+.composer{display:flex;gap:14px;padding:18px 20px}
+.composer textarea{
+  flex:1;min-height:74px;resize:vertical;border:0;background:transparent;outline:none;
+  font-family:inherit;font-size:15px;line-height:1.85;color:var(--ink);padding:6px 2px;
+}
+.composer textarea::placeholder{color:#B9AAB0;font-style:italic}
+.composer-side{display:flex;flex-direction:column;justify-content:space-between;align-items:flex-end;gap:10px}
+.btn{
+  font-family:inherit;cursor:pointer;border-radius:999px;
+  font-size:13px;letter-spacing:.14em;transition:.22s;border:1px solid transparent;padding:8px 18px;
+}
+.btn-ghost{background:rgba(255,255,255,.75);border-color:var(--gold-soft);color:var(--gold)}
+.btn-ghost:hover{background:#fff;border-color:var(--gold)}
+.btn-primary{background:linear-gradient(140deg,#C9A275,#B98CA0);color:#fff;box-shadow:0 6px 16px rgba(185,140,160,.32)}
+.btn-primary:hover{filter:brightness(1.06);transform:translateY(-1px)}
+.btn-primary:disabled{opacity:.6;cursor:wait;transform:none}
+.preview-strip{margin:0 20px 14px;display:flex;gap:8px;flex-wrap:wrap}
+.preview-strip img{width:74px;height:74px;object-fit:cover;border-radius:12px;border:1px solid var(--gold-soft)}
+
+.entry{padding:22px 24px 18px;margin-bottom:16px}
+.entry-head{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.entry-head .avatar{width:42px;height:42px;font-size:16px}
+.entry-meta{flex:1;min-width:0}
+.entry-meta h4{margin:0;font-size:15px;font-weight:600;letter-spacing:.1em;color:var(--plum-deep)}
+.entry-meta span{font-size:11.5px;color:#AC9CA4;letter-spacing:.12em}
+.entry-text{font-size:15.5px;line-height:2.05;letter-spacing:.04em;white-space:pre-wrap;word-break:break-word}
+.entry-img{margin-top:14px;border-radius:16px;overflow:hidden;border:1px solid var(--gold-soft)}
+.entry-img img{width:100%;display:block}
+
+.divider{display:flex;align-items:center;gap:12px;margin:18px 0 10px;color:var(--gold);font-size:10px;letter-spacing:.6em}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--gold-soft),transparent)}
+
+.comments{display:flex;flex-direction:column;gap:2px}
+.comment{display:flex;gap:8px;font-size:13.5px;line-height:1.9;color:var(--ink-soft);padding:3px 0}
+.comment b{color:var(--plum);font-weight:600;flex:0 0 auto}
+.comment .ct{font-size:11px;color:#BBAFB5;flex:0 0 auto;margin-left:auto}
+.comment-box{display:flex;gap:10px;margin-top:10px;align-items:center}
+.comment-box input{
+  flex:1;border:0;border-bottom:1px solid var(--gold-soft);background:transparent;
+  outline:none;font-family:inherit;font-size:14px;color:var(--ink);padding:7px 2px;transition:.25s;
+}
+.comment-box input:focus{border-color:var(--gold)}
+.comment-box input::placeholder{color:#C3B6BC;font-style:italic}
+.send{
+  border:1px solid var(--gold-soft);background:rgba(255,255,255,.7);
+  color:var(--gold);width:32px;height:32px;border-radius:50%;cursor:pointer;
+  transition:.22s;font-size:14px;line-height:1;
+}
+.send:hover{background:var(--gold);color:#fff}
+
+.album-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px;align-items:start}
+.photo{overflow:hidden;padding:0;transition:.3s cubic-bezier(.2,.8,.3,1)}
+.photo:hover{transform:translateY(-3px);box-shadow:0 18px 44px rgba(107,78,94,.15), inset 0 1px 0 #fff}
+.photo-img{width:100%;aspect-ratio:4/3;overflow:hidden;background:#EFE6E2}
+.photo-img img{width:100%;height:100%;object-fit:cover;display:block;transition:.6s}
+.photo:hover .photo-img img{transform:scale(1.045)}
+.photo-body{padding:16px 18px 18px}
+.photo-meta{display:flex;align-items:center;gap:9px;margin-bottom:9px}
+.photo-meta .avatar{width:30px;height:30px;font-size:13px}
+.photo-meta .name{font-size:13px;color:var(--plum);letter-spacing:.08em}
+.photo-meta .time{margin-left:auto;font-size:11px;color:#BBAFB5}
+.caption{font-size:14px;line-height:1.95;color:var(--ink);margin:0}
+
+.calendar{padding:24px 26px 26px}
+.cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.cal-title{display:flex;flex-direction:column;gap:2px}
+.cal-title h2{margin:0;font-size:21px;font-weight:600;letter-spacing:.16em;color:var(--plum-deep)}
+.cal-title span{font-size:11px;letter-spacing:.3em;color:var(--gold);text-transform:uppercase}
+.cal-nav{display:flex;gap:8px}
+.cal-nav button{
+  width:36px;height:36px;border-radius:50%;cursor:pointer;
+  border:1px solid var(--gold-soft);background:rgba(255,255,255,.72);
+  color:var(--gold);font-size:16px;line-height:1;transition:.22s;
+  display:flex;align-items:center;justify-content:center;
+}
+.cal-nav button:hover{background:#fff;transform:scale(1.06)}
+.cal-week{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:8px}
+.cal-week span{text-align:center;font-size:11.5px;letter-spacing:.2em;color:#B3A5AB;padding:6px 0}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.cal-day{
+  position:relative;aspect-ratio:1/1;border-radius:15px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size:15px;color:var(--ink);background:rgba(255,255,255,.52);
+  border:1px solid rgba(196,162,101,.13);
+  transition:.24s cubic-bezier(.2,.8,.3,1);
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+}
+.cal-day:hover{background:rgba(255,255,255,.95);transform:translateY(-2px);box-shadow:0 8px 20px rgba(107,78,94,.1)}
+.cal-day.empty{background:none;border:0;cursor:default;pointer-events:none}
+.cal-day.today{border-color:var(--gold);color:var(--plum-deep);font-weight:600}
+.cal-day.today::after{content:'今';position:absolute;bottom:4px;font-size:8px;letter-spacing:.1em;color:var(--gold)}
+.cal-day.selected{background:linear-gradient(150deg,#CDA77A,#B98CA0);color:#fff;border-color:transparent;box-shadow:0 8px 22px rgba(185,140,160,.4), inset 0 1px 0 rgba(255,255,255,.45)}
+.cal-day.selected::after{color:rgba(255,255,255,.85)}
+.cal-day .dot{position:absolute;bottom:7px;width:4px;height:4px;border-radius:50%;background:var(--rose)}
+.cal-day.selected .dot{background:#fff}
+
+.day-panel{margin-top:22px;padding-top:18px;border-top:1px solid var(--gold-soft)}
+.day-panel h4{margin:0 0 14px;font-size:13px;letter-spacing:.24em;color:var(--gold);font-weight:500}
+.day-item{display:flex;gap:10px;padding:10px 0;font-size:14px;line-height:1.85;color:var(--ink);border-bottom:1px dashed rgba(196,162,101,.2)}
+.day-item:last-child{border-bottom:0}
+.day-item .tag{flex:0 0 auto;font-size:10px;letter-spacing:.14em;color:var(--gold);border:1px solid var(--gold-soft);border-radius:20px;padding:2px 9px;height:fit-content;background:rgba(255,255,255,.6);margin-top:3px}
+.empty{text-align:center;color:#BBAFB5;font-style:italic;font-size:14px;padding:40px 0;letter-spacing:.14em}
+
+.modal-mask{
+  position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;
+  background:rgba(70,48,57,.28);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  animation:fadeIn .25s ease;
+}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes popIn{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}
+.modal{
+  width:min(420px,calc(100vw - 40px));padding:28px 30px 24px;
+  background:rgba(255,255,255,.92);animation:popIn .3s cubic-bezier(.2,.9,.3,1);
+  max-height:calc(100vh - 60px);overflow-y:auto;
+}
+.modal h3{margin:0 0 20px;font-size:16px;font-weight:600;letter-spacing:.24em;color:var(--plum-deep);text-align:center}
+.modal-avatar{display:flex;justify-content:center;margin-bottom:20px}
+.modal-avatar .avatar{width:84px;height:84px;font-size:30px;cursor:pointer}
+.modal-avatar .avatar:hover{filter:brightness(1.06)}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:11px;letter-spacing:.24em;color:var(--gold);margin-bottom:7px}
+.field input,.field textarea{
+  width:100%;border:1px solid var(--gold-soft);border-radius:12px;
+  background:rgba(255,255,255,.7);outline:none;font-family:inherit;
+  font-size:15px;color:var(--ink);padding:11px 14px;transition:.24s;
+}
+.field textarea{resize:vertical;min-height:80px;font-size:13px;line-height:1.7}
+.field input:focus,.field textarea:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(196,162,101,.12)}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:22px}
+.slot-btn.active{background:linear-gradient(140deg,#C9A275,#B98CA0);color:#fff;border-color:transparent}
+.hint{font-size:12px;line-height:1.85;color:var(--ink-soft);letter-spacing:.06em;margin:0 0 16px}
+.hint a{color:var(--gold);text-decoration:none;border-bottom:1px dashed var(--gold-soft);cursor:pointer}
+.hint a:hover{color:var(--plum)}
+.hint code{background:rgba(196,162,101,.12);padding:1px 5px;border-radius:5px;font-family:ui-monospace,Menlo,monospace;font-size:11px;color:var(--plum)}
+.steps{font-size:12.5px;line-height:2;color:var(--ink-soft);letter-spacing:.04em;padding-left:20px;margin:0 0 16px}
+.steps li{margin-bottom:4px}
+.steps b{color:var(--plum)}
+.steps code{background:rgba(196,162,101,.12);padding:1px 5px;border-radius:5px;font-family:ui-monospace,Menlo,monospace;font-size:11px;color:var(--plum)}
+
+.hidden{display:none!important}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(196,162,101,.28);border-radius:10px;border:2px solid transparent;background-clip:content-box}
+::-webkit-scrollbar-thumb:hover{background:rgba(196,162,101,.5);background-clip:content-box}
+
+.toast{
+  position:fixed;left:50%;bottom:40px;transform:translateX(-50%) translateY(20px);
+  background:rgba(70,48,57,.92);color:#fff;padding:11px 24px;border-radius:999px;
+  font-size:13px;letter-spacing:.16em;z-index:300;opacity:0;pointer-events:none;
+  transition:.35s cubic-bezier(.2,.9,.3,1);box-shadow:0 10px 30px rgba(70,48,57,.28);
+  max-width:80vw;text-align:center;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+@media(max-width:960px){
+  .layout{grid-template-columns:1fr;padding:20px 18px 70px;gap:18px}
+  .topbar{padding:14px 20px}
+  .brand h1{font-size:20px;letter-spacing:.24em}
+  .brand .en{display:none}
+  .tabs{width:100%;justify-content:space-between}
+  .tab{flex:1;padding:10px 0;text-align:center}
+  .album-grid{grid-template-columns:1fr}
+  .calendar{padding:18px 14px}
+  .cal-day{border-radius:12px;font-size:14px}
+  .sync-badge span:last-child{display:none}
+  .sync-badge{padding:6px 8px}
+}
+</style>
+</head>
+<body>
+
+<canvas id="rain"></canvas>
+
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <span class="mark">❦</span>
+      <h1>梅雨季</h1>
+      <span class="en">Plum Rain Season</span>
+    </div>
+    <div class="topbar-right">
+      <div class="sync-badge local" id="sync-badge" title="点击手动同步">
+        <span class="dot"></span><span>本地</span>
+      </div>
+      <button class="icon-btn" id="open-settings" title="设置">⚙</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <div id="people"></div>
+      <div class="card corner quote-card">
+        我们隔着一场雨<br>
+        却淋着同一片天空
+        <span class="sep">◆ ◆ ◆</span>
+      </div>
+    </aside>
+
+    <main class="main">
+      <nav class="tabs">
+        <button class="tab active" data-view="journal">日志</button>
+        <button class="tab" data-view="album">相册</button>
+        <button class="tab" data-view="calendar">日历</button>
+      </nav>
+
+      <section class="view" id="view-journal">
+        <div class="card corner composer">
+          <div class="avatar A" id="composer-avatar"><span>·</span></div>
+          <textarea id="journal-input" placeholder="今天下雨了吗…"></textarea>
+          <div class="composer-side">
+            <label class="btn btn-ghost" style="display:inline-block">
+              配图
+              <input type="file" id="journal-file" accept="image/*" hidden>
+            </label>
+            <button class="btn btn-primary" id="journal-publish">发布</button>
+          </div>
+        </div>
+        <div class="preview-strip hidden" id="journal-preview"></div>
+        <div id="journal-list"></div>
+      </section>
+
+      <section class="view hidden" id="view-album">
+        <div class="card corner composer" style="align-items:center">
+          <div style="flex:1">
+            <div style="font-size:15px;letter-spacing:.16em;color:var(--plum-deep)">相册</div>
+            <div style="font-size:12.5px;color:var(--ink-soft);margin-top:6px;letter-spacing:.1em">
+              把那些淋过雨的瞬间，都收进来。
+            </div>
+          </div>
+          <label class="btn btn-primary" style="display:inline-block">
+            上传照片
+            <input type="file" id="photo-file" accept="image/*" multiple hidden>
+          </label>
+        </div>
+        <div class="album-grid" id="album-grid"></div>
+      </section>
+
+      <section class="view hidden" id="view-calendar">
+        <div class="card corner calendar">
+          <div class="cal-head">
+            <div class="cal-title">
+              <h2 id="cal-title">—</h2>
+              <span id="cal-sub">Calendar</span>
+            </div>
+            <div class="cal-nav">
+              <button id="cal-prev">‹</button>
+              <button id="cal-next">›</button>
+            </div>
+          </div>
+          <div class="cal-week">
+            <span>日</span><span>一</span><span>二</span><span>三</span>
+            <span>四</span><span>五</span><span>六</span>
+          </div>
+          <div class="cal-grid" id="cal-grid"></div>
+          <div class="day-panel">
+            <h4 id="day-panel-title">— 这一天 —</h4>
+            <div id="day-panel-body"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<div class="modal-mask hidden" id="modal-mask">
+  <div class="card corner modal">
+    <h3>编 辑 资 料</h3>
+    <div class="modal-avatar">
+      <div class="avatar" id="modal-avatar"></div>
+    </div>
+    <div class="field">
+      <label>昵称</label>
+      <input type="text" id="modal-name" maxlength="12" placeholder="怎么称呼你">
+    </div>
+    <div class="field">
+      <label>此刻状态</label>
+      <input type="text" id="modal-status" maxlength="40" placeholder="比如：在窗边听雨">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="modal-cancel">取消</button>
+      <button class="btn btn-primary" id="modal-save">保存</button>
+    </div>
+    <input type="file" id="modal-file" accept="image/*" hidden>
+  </div>
+</div>
+
+<div class="modal-mask hidden" id="setup-mask">
+  <div class="card corner modal" style="width:min(560px,calc(100vw - 40px))">
+    <h3>梅 雨 季 · 设 置</h3>
+
+    <div class="field">
+      <label>你的昵称</label>
+      <input type="text" id="setup-name" maxlength="12" placeholder="比如：知雨">
+    </div>
+
+    <div class="field">
+      <label>你是第几位？</label>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-ghost slot-btn" data-slot="A" style="flex:1">1 号</button>
+        <button class="btn btn-ghost slot-btn" data-slot="B" style="flex:1">2 号</button>
+      </div>
+      <p class="hint" style="margin:10px 0 0">两个人选不同的即可，同一个设备请一直用同一个位置。</p>
+    </div>
+
+    <div class="field" style="border-top:1px solid var(--gold-soft);padding-top:18px;margin-top:6px">
+      <label style="color:var(--plum)">☁ 云同步（Gitee）· 可选</label>
+      <ol class="steps">
+        <li>登录 <a href="https://gitee.com" target="_blank">gitee.com</a>，新建一个仓库（可设为私有）</li>
+        <li>点右上角头像 → <b>设置</b> → <b>私人令牌</b> → 生成新令牌，勾选 <code>projects</code> 权限</li>
+        <li>把下面三项填进来，两边填一样的</li>
+      </ol>
+    </div>
+
+    <div class="field">
+      <label>Gitee 用户名</label>
+      <input type="text" id="setup-owner" placeholder="例如 zhangsan">
+    </div>
+    <div class="field">
+      <label>仓库名</label>
+      <input type="text" id="setup-repo" placeholder="例如 meiyuji">
+    </div>
+    <div class="field">
+      <label>私人令牌（Token）</label>
+      <input type="text" id="setup-token" placeholder="粘贴生成的令牌">
+    </div>
+    <div class="field">
+      <label>数据文件名（默认 meiyuji.json）</label>
+      <input type="text" id="setup-path" placeholder="meiyuji.json">
+    </div>
+
+    <p class="hint">
+      不填也能用，数据只保存在这台设备上。<br>
+      填好后两边就能自动同步（每 15 秒检查一次）。
+    </p>
+
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="setup-cancel">取消</button>
+      <button class="btn btn-primary" id="setup-save">保存并测试</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   工具
+   ============================================================ */
+const $  = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const pad = n => String(n).padStart(2, '0');
+const uid = () => 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+  const r = Math.random() * 16 | 0;
+  return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+});
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c =>
+  ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+const toTime = v => typeof v === 'number' ? v : new Date(v).getTime();
+
+function fmtTime(t) {
+  const d = new Date(t), now = Date.now(), diff = now - t;
+  if (diff < 60e3) return '刚刚';
+  if (diff < 3600e3) return Math.floor(diff / 60e3) + ' 分钟前';
+  if (diff < 86400e3) return Math.floor(diff / 3600e3) + ' 小时前';
+  if (diff < 86400e3 * 7) return Math.floor(diff / 86400e3) + ' 天前';
+  return `${d.getFullYear()}.${pad(d.getMonth()+1)}.${pad(d.getDate())}`;
+}
+
+let toastTimer;
+function toast(msg) {
+  const el = $('#toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2400);
+}
+
+function readImage(file, max = 1000, quality = 0.72) {
+  return new Promise((resolve, reject) => {
+    const fr = new FileReader();
+    fr.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        let { width: w, height: h } = img;
+        const scale = Math.min(1, max / Math.max(w, h));
+        w = Math.round(w * scale); h = Math.round(h * scale);
+        const cv = document.createElement('canvas');
+        cv.width = w; cv.height = h;
+        const ctx = cv.getContext('2d');
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(0, 0, w, h);
+        ctx.drawImage(img, 0, 0, w, h);
+        let q = quality;
+        let out = cv.toDataURL('image/jpeg', q);
+        while (out.length > 320000 && q > 0.35) {
+          q -= 0.1;
+          out = cv.toDataURL('image/jpeg', q);
+        }
+        resolve(out);
+      };
+      img.onerror = reject;
+      img.src = fr.result;
+    };
+    fr.onerror = reject;
+    fr.readAsDataURL(file);
+  });
+}
+
+function placeholder(i) {
+  const sets = [
+    ['#F3DDE0', '#C9D6E8', '#EFE3D0'],
+    ['#E6DDF0', '#F0DAD4', '#D9E5DC'],
+    ['#DCE6F0', '#F2E4E9', '#E8E0CF'],
+    ['#EADFEF', '#DDE8F2', '#F5E6DA'],
+    ['#EFE2DA', '#D8E1EC', '#E7DCE8']
+  ];
+  const c = sets[i % sets.length];
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+    <defs>
+      <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="${c[0]}"/><stop offset="1" stop-color="${c[1]}"/>
+      </linearGradient>
+    </defs>
+    <rect width="800" height="600" fill="url(#g)"/>
+    <circle cx="250" cy="230" r="170" fill="${c[2]}" opacity="0.5"/>
+    <circle cx="580" cy="430" r="210" fill="${c[1]}" opacity="0.42"/>
+    <circle cx="660" cy="120" r="110" fill="${c[0]}" opacity="0.45"/>
+  </svg>`;
+  return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+}
+
+/* ============================================================
+   配置
+   ============================================================ */
+const CFG_KEY = 'mjy-cfg-v4';
+const CACHE_KEY = 'mjy-cache-v4';
+const DEFAULT_NAMES = { A: '雨', B: '砚' };
+
+let cfg = {};
+try { cfg = JSON.parse(localStorage.getItem(CFG_KEY) || '{}'); } catch(e) { cfg = {}; }
+
+function saveCfg() {
+  try { localStorage.setItem(CFG_KEY, JSON.stringify(cfg)); } catch(e) {}
+}
+
+const state = {
+  // 默认 A，不强制设置；想改随时点右上角齿轮
+  me: cfg.slot || 'A',
+  users: {
+    A: { id:'A', name: DEFAULT_NAMES.A, avatar:'', status:'' },
+    B: { id:'B', name: DEFAULT_NAMES.B, avatar:'', status:'' }
+  },
+  journals: [],
+  photos: [],
+  comments: []
+};
+
+const cloud = {
+  sha: null,
+  lastSync: 0,
+  syncing: false
+};
+
+/* ============================================================
+   Gitee API
+   ============================================================ */
+const GITEE = 'https://gitee.com/api/v5';
+
+function isCloudReady() {
+  return !!(cfg.owner && cfg.repo && cfg.token);
+}
+
+function cloudUrl() {
+  const path = cfg.path || 'meiyuji.json';
+  return `${GITEE}/repos/${cfg.owner}/${cfg.repo}/contents/${encodeURIComponent(path)}`;
+}
+
+function encodeBase64(str) {
+  return btoa(unescape(encodeURIComponent(str)));
+}
+function decodeBase64(str) {
+  return decodeURIComponent(escape(atob(String(str).replace(/\s/g, ''))));
+}
+
+async function giteePull() {
+  if (!isCloudReady()) return { changed: false };
+  const url = cloudUrl() + '?access_token=' + encodeURIComponent(cfg.token) + '&t=' + Date.now();
+  const res = await fetch(url, { method: 'GET' });
+  if (res.status === 404) {
+    const changed = cloud.sha !== null;
+    cloud.sha = null;
+    return { changed, empty: true };
+  }
+  if (!res.ok) throw new Error('读取失败 ' + res.status);
+  const data = await res.json();
+  const changed = cloud.sha !== data.sha;
+  cloud.sha = data.sha;
+  if (changed) {
+    try {
+      const json = JSON.parse(decodeBase64(data.content));
+      applyRemote(json);
+    } catch (e) {
+      console.warn('解析远程数据失败', e);
+    }
+  }
+  cloud.lastSync = Date.now();
+  return { changed };
+}
+
+async function giteePush() {
+  if (!isCloudReady()) return false;
+  const json = JSON.stringify(exportState());
+  const content = encodeBase64(json);
+
+  if (content.length > 4 * 1024 * 1024) {
+    throw new Error('数据太大，请减少图片数量');
+  }
+
+  const params = new URLSearchParams();
+  params.append('access_token', cfg.token);
+  params.append('content', content);
+  params.append('message', 'update ' + new Date().toISOString());
+  if (cloud.sha) params.append('sha', cloud.sha);
+
+  const res = await fetch(cloudUrl(), {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: params.toString()
+  });
+
+  if (!res.ok) {
+    let msg = '写入失败 ' + res.status;
+    try {
+      const err = await res.json();
+      if (err.message) msg += '：' + err.message;
+    } catch (e) {}
+    throw new Error(msg);
+  }
+  const data = await res.json();
+  if (data && data.content && data.content.sha) cloud.sha = data.content.sha;
+  cloud.lastSync = Date.now();
+  return true;
+}
+
+/* ============================================================
+   数据导入导出
+   ============================================================ */
+function exportState() {
+  return {
+    version: 4,
+    users: state.users,
+    journals: state.journals,
+    photos: state.photos,
+    comments: state.comments,
+    updatedAt: Date.now()
+  };
+}
+
+function applyRemote(d) {
+  if (d.users) {
+    ['A','B'].forEach(slot => {
+      if (d.users[slot]) {
+        state.users[slot] = {
+          id: slot,
+          name: d.users[slot].name || DEFAULT_NAMES[slot],
+          avatar: d.users[slot].avatar || '',
+          status: d.users[slot].status || ''
+        };
+      }
+    });
+  }
+  state.journals = (d.journals || []).map(j => ({
+    id: j.id, author: j.author, text: j.text || '',
+    image: j.image || '', time: toTime(j.time)
+  }));
+  state.photos = (d.photos || []).map(p => ({
+    id: p.id, author: p.author, src: p.src,
+    caption: p.caption || '', time: toTime(p.time)
+  }));
+  state.comments = (d.comments || []).map(c => ({
+    id: c.id, parentType: c.parentType, parentId: c.parentId,
+    author: c.author, text: c.text, time: toTime(c.time)
+  }));
+}
+
+function loadLocal() {
+  let d = null;
+  try { d = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null'); } catch(e) {}
+  if (!d) {
+    d = {
+      users: {
+        A: { id:'A', name: DEFAULT_NAMES.A, avatar:'', status:'在窗边听雨，想你' },
+        B: { id:'B', name: DEFAULT_NAMES.B, avatar:'', status:'刚泡好一壶茶 🍵' }
+      },
+      journals: [
+        { id: uid(), author:'B',
+          text:'今天梅雨又下大了，屋檐的水连成一条线。\n想起去年我们在便利店门口躲雨，你分了我半把伞。',
+          image:'', time: Date.now() - 3600e3 * 26 },
+        { id: uid(), author:'A',
+          text:'楼下那棵石榴开花了。雨打在花瓣上，红得发亮。\n等你来的时候，应该正好结果。',
+          image:'', time: Date.now() - 3600e3 * 5 }
+      ],
+      photos: [
+        { id: uid(), author:'B', src: placeholder(0), caption:'巷口的老墙，被雨洗得发青。', time: Date.now() - 3600e3 * 52 },
+        { id: uid(), author:'A', src: placeholder(1), caption:'窗台上的水珠，一颗一颗排着队。', time: Date.now() - 3600e3 * 30 },
+        { id: uid(), author:'B', src: placeholder(2), caption:'雨停了五分钟，云缝里漏下来一点光。', time: Date.now() - 3600e3 * 8 }
+      ],
+      comments: []
+    };
+    saveLocal(d);
+  }
+  applyRemote(d);
+}
+
+function saveLocal(d) {
+  try { localStorage.setItem(CACHE_KEY, JSON.stringify(d || exportState())); }
+  catch(e) {
+    console.warn('本地缓存失败', e);
+    toast('本地缓存已满，建议删除部分图片');
+  }
+}
+
+/* ============================================================
+   同步操作：先拉后改再推
+   ============================================================ */
+async function syncOp(fn, { silent = false } = {}) {
+  if (isCloudReady()) {
+    try {
+      setSyncStatus('syncing');
+      await giteePull();
+    } catch (e) {
+      console.warn('拉取失败', e);
+      if (!silent) toast('同步拉取失败：' + e.message);
+    }
+  }
+
+  const result = fn();
+
+  saveLocal();
+
+  if (isCloudReady()) {
+    try {
+      await giteePush();
+      setSyncStatus('online');
+    } catch (e) {
+      console.error(e);
+      setSyncStatus('error');
+      if (!silent) toast('同步失败：' + e.message);
+      return result;
+    }
+  }
+  return result;
+}
+
+/* ============================================================
+   自动轮询
+   ============================================================ */
+let pollTimer = null;
+
+function startPolling() {
+  stopPolling();
+  if (!isCloudReady()) return;
+  pollTimer = setInterval(async () => {
+    if (cloud.syncing) return;
+    try {
+      cloud.syncing = true;
+      setSyncStatus('syncing');
+      const r = await giteePull();
+      if (r.changed) {
+        saveLocal();
+        renderAllPreservingInputs();
+      }
+      setSyncStatus('online');
+    } catch (e) {
+      setSyncStatus('error');
+    } finally {
+      cloud.syncing = false;
+    }
+  }, 15000);
+}
+function stopPolling() {
+  if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+}
+
+function setSyncStatus(s) {
+  const el = $('#sync-badge');
+  const span = el.querySelector('span:last-child');
+  el.classList.remove('local', 'syncing', 'error');
+  if (s === 'online') { span.textContent = '已同步'; el.title = '点击手动同步'; }
+  else if (s === 'syncing') { el.classList.add('syncing'); span.textContent = '同步中'; }
+  else if (s === 'error') { el.classList.add('error'); span.textContent = '同步失败'; }
+  else { el.classList.add('local'); span.textContent = '本地'; el.title = '仅保存在本机，点击 ⚙ 配置云同步'; }
+}
+
+/* ============================================================
+   渲染
+   ============================================================ */
+function avatarHTML(slot, extra = '') {
+  const u = state.users[slot];
+  const initial = (u.name || '·').slice(0, 1);
+  return `<div class="avatar ${slot} ${extra}">${
+    u.avatar ? `<img src="${u.avatar}" alt="">` : `<span>${esc(initial)}</span>`
+  }</div>`;
+}
+
+function renderPeople() {
+  const order = state.me === 'B' ? ['B','A'] : ['A','B'];
+  $('#people').innerHTML = order.map(k => {
+    const u = state.users[k];
+    const isMe = k === state.me;
+    return `
+      <div class="card corner person" data-user="${k}">
+        ${avatarHTML(k)}
+        <div class="person-body">
+          <div class="person-top">
+            <h3>${esc(u.name)}</h3>
+            <span class="role">${isMe ? '我' : 'TA'}</span>
+          </div>
+          <p class="status">${esc(u.status) || '&nbsp;'}</p>
+        </div>
+        <button class="icon-btn edit-person" data-user="${k}" title="编辑资料">✎</button>
+      </div>`;
+  }).join('');
+
+  const ca = $('#composer-avatar');
+  const me = state.users[state.me];
+  ca.className = 'avatar ' + state.me;
+  ca.innerHTML = me.avatar
+    ? `<img src="${me.avatar}" alt="">`
+    : `<span>${esc((me.name || '·').slice(0,1))}</span>`;
+}
+
+function commentsFor(type, id) {
+  return state.comments
+    .filter(c => c.parentType === type && c.parentId === id)
+    .sort((a, b) => a.time - b.time);
+}
+
+function commentBlock(item, kind) {
+  const list = commentsFor(kind, item.id);
+  return `
+    <div class="divider">◆</div>
+    <div class="comments">
+      ${list.map(c => `
+        <div class="comment">
+          <b>${esc(state.users[c.author]?.name || '某人')}</b>
+          <span>${esc(c.text)}</span>
+          <span class="ct">${fmtTime(c.time)}</span>
+        </div>`).join('')}
+    </div>
+    <div class="comment-box">
+      <input type="text" placeholder="说点什么…" data-kind="${kind}" data-id="${item.id}">
+      <button class="send" data-kind="${kind}" data-id="${item.id}">→</button>
+    </div>`;
+}
+
+function renderJournals() {
+  const list = [...state.journals].sort((a, b) => b.time - a.time);
+  const box = $('#journal-list');
+  if (!list.length) {
+    box.innerHTML = `<div class="card corner empty">还没有日记，写下第一句吧。</div>`;
+    return;
+  }
+  box.innerHTML = list.map(j => `
+    <article class="card corner entry">
+      <div class="entry-head">
+        ${avatarHTML(j.author)}
+        <div class="entry-meta">
+          <h4>${esc(state.users[j.author]?.name || '某人')}</h4>
+          <span>${fmtTime(j.time)}</span>
+        </div>
+      </div>
+      <div class="entry-text">${esc(j.text)}</div>
+      ${j.image ? `<div class="entry-img"><img src="${j.image}" alt=""></div>` : ''}
+      ${commentBlock(j, 'journal')}
+    </article>`).join('');
+}
+
+function renderAlbum() {
+  const list = [...state.photos].sort((a, b) => b.time - a.time);
+  const box = $('#album-grid');
+  if (!list.length) {
+    box.innerHTML = `<div class="card corner empty" style="grid-column:1/-1">相册还是空的，上传第一张吧。</div>`;
+    return;
+  }
+  box.innerHTML = list.map(p => `
+    <figure class="card corner photo">
+      <div class="photo-img"><img src="${p.src}" alt=""></div>
+      <figcaption class="photo-body">
+        <div class="photo-meta">
+          ${avatarHTML(p.author)}
+          <span class="name">${esc(state.users[p.author]?.name || '某人')}</span>
+          <span class="time">${fmtTime(p.time)}</span>
+        </div>
+        ${p.caption ? `<p class="caption">${esc(p.caption)}</p>` : ''}
+        ${commentBlock(p, 'photo')}
+      </figcaption>
+    </figure>`).join('');
+}
+
+let calCursor = new Date();
+let selectedDay = new Date();
+
+function sameDay(a, b) {
+  return a.getFullYear() === b.getFullYear()
+      && a.getMonth() === b.getMonth()
+      && a.getDate() === b.getDate();
+}
+function hasContentOn(date) {
+  return state.journals.some(j => sameDay(new Date(j.time), date))
+      || state.photos.some(p => sameDay(new Date(p.time), date));
+}
+
+function renderCalendar() {
+  const y = calCursor.getFullYear(), m = calCursor.getMonth();
+  $('#cal-title').textContent = `${y} 年 ${m + 1} 月`;
+  $('#cal-sub').textContent = new Date(y, m, 1)
+    .toLocaleDateString('en-US', { month: 'long' }).toUpperCase();
+
+  const firstDay = new Date(y, m, 1).getDay();
+  const days = new Date(y, m + 1, 0).getDate();
+  const today = new Date();
+  let html = '';
+  for (let i = 0; i < firstDay; i++) html += `<div class="cal-day empty"></div>`;
+  for (let d = 1; d <= days; d++) {
+    const date = new Date(y, m, d);
+    const cls = ['cal-day',
+      sameDay(date, today) ? 'today' : '',
+      sameDay(date, selectedDay) ? 'selected' : ''
+    ].join(' ');
+    html += `<div class="${cls}" data-day="${d}">
+      <span>${d}</span>${hasContentOn(date) ? '<i class="dot"></i>' : ''}
+    </div>`;
+  }
+  $('#cal-grid').innerHTML = html;
+  renderDayPanel();
+}
+
+function renderDayPanel() {
+  const d = selectedDay;
+  $('#day-panel-title').textContent =
+    `— ${d.getFullYear()} 年 ${d.getMonth() + 1} 月 ${d.getDate()} 日 —`;
+  const items = [];
+  state.journals.forEach(j => {
+    if (sameDay(new Date(j.time), d))
+      items.push({ tag:'日志', text: j.text.slice(0, 60) + (j.text.length > 60 ? '…' : ''), time: j.time });
+  });
+  state.photos.forEach(p => {
+    if (sameDay(new Date(p.time), d))
+      items.push({ tag:'照片', text: p.caption || '（无描述）', time: p.time });
+  });
+  items.sort((a, b) => a.time - b.time);
+  $('#day-panel-body').innerHTML = items.length
+    ? items.map(i => `<div class="day-item"><span class="tag">${i.tag}</span><span>${esc(i.text)}</span></div>`).join('')
+    : `<div class="empty" style="padding:20px 0">这一天很安静，只有雨声。</div>`;
+}
+
+function renderAll() {
+  renderPeople();
+  renderJournals();
+  renderAlbum();
+  renderCalendar();
+}
+
+function renderAllPreservingInputs() {
+  const vals = {};
+  document.querySelectorAll('input[data-kind][data-id]').forEach(el => {
+    vals[`${el.dataset.kind}:${el.dataset.id}`] = el.value;
+  });
+  renderAll();
+  document.querySelectorAll('input[data-kind][data-id]').forEach(el => {
+    const k = `${el.dataset.kind}:${el.dataset.id}`;
+    if (vals[k]) el.value = vals[k];
+  });
+}
+
+/* ============================================================
+   交互：标签
+   ============================================================ */
+$$('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    $$('.tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    $$('.view').forEach(v => v.classList.add('hidden'));
+    $('#view-' + tab.dataset.view).classList.remove('hidden');
+  });
+});
+
+/* ============================================================
+   交互：发布日志
+   ============================================================ */
+let pendingImage = '';
+
+$('#journal-file').addEventListener('change', async e => {
+  const f = e.target.files[0];
+  if (!f) return;
+  try { pendingImage = await readImage(f); }
+  catch (err) { toast('图片读取失败'); return; }
+  const strip = $('#journal-preview');
+  strip.innerHTML = `<img src="${pendingImage}" alt=""><button class="btn btn-ghost" id="rm-img" style="align-self:flex-start">移除</button>`;
+  strip.classList.remove('hidden');
+  $('#rm-img').onclick = () => {
+    pendingImage = '';
+    strip.classList.add('hidden');
+    strip.innerHTML = '';
+    $('#journal-file').value = '';
+  };
+});
+
+$('#journal-publish').addEventListener('click', async () => {
+  const ta = $('#journal-input');
+  const text = ta.value.trim();
+  if (!text && !pendingImage) return;
+
+  const btn = $('#journal-publish');
+  btn.disabled = true; btn.textContent = '发布中';
+
+  await syncOp(() => {
+    state.journals.push({
+      id: uid(), author: state.me, text, image: pendingImage,
+      time: Date.now()
+    });
+  });
+
+  btn.disabled = false; btn.textContent = '发布';
+  ta.value = '';
+  pendingImage = '';
+  $('#journal-preview').classList.add('hidden');
+  $('#journal-preview').innerHTML = '';
+  $('#journal-file').value = '';
+  renderAll();
+});
+
+/* ============================================================
+   交互：上传照片
+   ============================================================ */
+$('#photo-file').addEventListener('change', async e => {
+  const files = [...e.target.files];
+  if (!files.length) return;
+  toast(`正在处理 ${files.length} 张…`);
+
+  const items = [];
+  for (const f of files) {
+    try {
+      const src = await readImage(f);
+      items.push({ id: uid(), author: state.me, src, caption: '', time: Date.now() });
+    } catch (err) { console.error(err); }
+  }
+
+  if (!items.length) { e.target.value = ''; return; }
+
+  await syncOp(() => {
+    items.forEach(it => state.photos.push(it));
+  });
+
+  e.target.value = '';
+  renderAll();
+  toast('上传完成');
+});
+
+/* ============================================================
+   交互：评论
+   ============================================================ */
+document.addEventListener('click', async e => {
+  const btn = e.target.closest('.send');
+  if (!btn) return;
+  const { kind, id } = btn.dataset;
+  const input = document.querySelector(`input[data-kind="${kind}"][data-id="${id}"]`);
+  if (!input) return;
+  const text = input.value.trim();
+  if (!text) return;
+
+  input.value = '';
+  await syncOp(() => {
+    state.comments.push({
+      id: uid(), parentType: kind, parentId: id,
+      author: state.me, text, time: Date.now()
+    });
+  });
+  renderAllPreservingInputs();
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  const input = e.target.closest('input[data-kind]');
+  if (!input) return;
+  e.preventDefault();
+  const { kind, id } = input.dataset;
+  const btn = document.querySelector(`.send[data-kind="${kind}"][data-id="${id}"]`);
+  btn && btn.click();
+});
+
+/* ============================================================
+   交互：日历
+   ============================================================ */
+$('#cal-prev').addEventListener('click', () => {
+  calCursor = new Date(calCursor.getFullYear(), calCursor.getMonth() - 1, 1);
+  renderCalendar();
+});
+$('#cal-next').addEventListener('click', () => {
+  calCursor = new Date(calCursor.getFullYear(), calCursor.getMonth() + 1, 1);
+  renderCalendar();
+});
+$('#cal-grid').addEventListener('click', e => {
+  const cell = e.target.closest('.cal-day');
+  if (!cell || cell.classList.contains('empty')) return;
+  selectedDay = new Date(calCursor.getFullYear(), calCursor.getMonth(), +cell.dataset.day);
+  renderCalendar();
+});
+
+/* ============================================================
+   交互：编辑资料
+   ============================================================ */
+let editingUser = null;
+let editingAvatar = '';
+
+function openEditModal(slot) {
+  editingUser = slot;
+  const u = state.users[slot];
+  editingAvatar = u.avatar || '';
+  $('#modal-name').value = u.name;
+  $('#modal-status').value = u.status;
+  refreshModalAvatar();
+  $('#modal-mask').classList.remove('hidden');
+}
+function refreshModalAvatar() {
+  const el = $('#modal-avatar');
+  el.className = 'avatar ' + (editingUser || 'A');
+  el.innerHTML = editingAvatar
+    ? `<img src="${editingAvatar}" alt="">`
+    : `<span>${esc(($('#modal-name').value || '·').slice(0,1))}</span>`;
+}
+function closeEditModal() {
+  $('#modal-mask').classList.add('hidden');
+  editingUser = null;
+}
+
+document.addEventListener('click', e => {
+  const btn = e.target.closest('.edit-person');
+  if (btn) openEditModal(btn.dataset.user);
+});
+
+$('#modal-avatar').addEventListener('click', () => $('#modal-file').click());
+$('#modal-name').addEventListener('input', refreshModalAvatar);
+
+$('#modal-file').addEventListener('change', async e => {
+  const f = e.target.files[0];
+  if (!f) return;
+  try {
+    editingAvatar = await readImage(f, 400, 0.8);
+    refreshModalAvatar();
+  } catch (err) { toast('头像处理失败'); }
+});
+
+$('#modal-cancel').addEventListener('click', closeEditModal);
+$('#modal-mask').addEventListener('click', e => {
+  if (e.target.id === 'modal-mask') closeEditModal();
+});
+
+$('#modal-save').addEventListener('click', async () => {
+  if (!editingUser) return;
+  const name = $('#modal-name').value.trim() || state.users[editingUser].name;
+  const status = $('#modal-status').value.trim();
+  await syncOp(() => {
+    Object.assign(state.users[editingUser], { name, status, avatar: editingAvatar });
+  });
+  closeEditModal();
+  renderAll();
+  toast('已保存');
+});
+
+/* ============================================================
+   交互：设置
+   ============================================================ */
+let setupSlot = state.me;
+
+function openSetup() {
+  setupSlot = state.me;
+  $('#setup-name').value = state.users[state.me].name;
+  $('#setup-owner').value = cfg.owner || '';
+  $('#setup-repo').value = cfg.repo || '';
+  $('#setup-token').value = cfg.token || '';
+  $('#setup-path').value = cfg.path || 'meiyuji.json';
+  $$('.slot-btn').forEach(b => b.classList.toggle('active', b.dataset.slot === setupSlot));
+  $('#setup-mask').classList.remove('hidden');
+}
+function closeSetup() { $('#setup-mask').classList.add('hidden'); }
+
+$$('.slot-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    setupSlot = btn.dataset.slot;
+    $$('.slot-btn').forEach(b => b.classList.toggle('active', b === btn));
+  });
+});
+
+$('#open-settings').addEventListener('click', openSetup);
+$('#setup-cancel').addEventListener('click', closeSetup);
+$('#setup-mask').addEventListener('click', e => {
+  if (e.target.id === 'setup-mask') closeSetup();
+});
+
+$('#setup-save').addEventListener('click', async () => {
+  const name = $('#setup-name').value.trim();
+  if (!name) { toast('请填写昵称'); return; }
+  if (!setupSlot) { toast('请选择你是第几位'); return; }
+
+  const owner = $('#setup-owner').value.trim();
+  const repo = $('#setup-repo').value.trim();
+  const token = $('#setup-token').value.trim();
+  const path = $('#setup-path').value.trim() || 'meiyuji.json';
+
+  const btn = $('#setup-save');
+  btn.disabled = true; btn.textContent = '测试中…';
+
+  const willCloud = owner && repo && token;
+
+  cfg.slot = setupSlot;
+  cfg.owner = owner;
+  cfg.repo = repo;
+  cfg.token = token;
+  cfg.path = path;
+  state.me = setupSlot;
+  saveCfg();
+
+  cloud.sha = null;
+  stopPolling();
+
+  if (willCloud) {
+    try {
+      setSyncStatus('syncing');
+      const r = await giteePull();
+      if (r.empty) {
+        await giteePush();
+      }
+    } catch (e) {
+      btn.disabled = false; btn.textContent = '保存并测试';
+      toast('连接失败：' + e.message);
+      setSyncStatus('error');
+      return;
+    }
+  }
+
+  await syncOp(() => {
+    state.users[setupSlot].name = name;
+  }, { silent: true });
+
+  btn.disabled = false; btn.textContent = '保存并测试';
+  closeSetup();
+  renderAll();
+
+  if (willCloud) {
+    setSyncStatus('online');
+    startPolling();
+    toast('已连接 Gitee');
+  } else {
+    setSyncStatus('local');
+    toast('已保存到本地');
+  }
+});
+
+/* ============================================================
+   手动同步（点击徽章）
+   ============================================================ */
+$('#sync-badge').addEventListener('click', async () => {
+  if (!isCloudReady()) {
+    toast('未配置云同步，点击 ⚙ 设置');
+    return;
+  }
+  try {
+    setSyncStatus('syncing');
+    const r = await giteePull();
+    saveLocal();
+    renderAllPreservingInputs();
+    setSyncStatus('online');
+    toast(r.changed ? '已拉取最新数据' : '已是最新');
+  } catch (e) {
+    setSyncStatus('error');
+    toast('同步失败：' + e.message);
+  }
+});
+
+/* ============================================================
+   雨滴动画
+   ============================================================ */
+(function rain() {
+  const canvas = $('#rain');
+  const ctx = canvas.getContext('2d');
+  let W = 0, H = 0, dpr = Math.min(window.devicePixelRatio || 1, 2);
+  let drops = [], ripples = [];
+
+  function resize() {
+    W = window.innerWidth; H = window.innerHeight;
+    canvas.width = W * dpr; canvas.height = H * dpr;
+    canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const count = Math.min(220, Math.round(W * H / 9000));
+    drops = Array.from({ length: count }, () => newDrop(true));
+  }
+  function newDrop(init) {
+    return {
+      x: Math.random() * (W + 200) - 100,
+      y: init ? Math.random() * H : -30 - Math.random() * 80,
+      len: 9 + Math.random() * 22,
+      spd: 1.1 + Math.random() * 2.6,
+      alpha: 0.05 + Math.random() * 0.16,
+      w: 0.6 + Math.random() * 0.9,
+      drift: 0.14 + Math.random() * 0.24
+    };
+  }
+  function spawnRipple() {
+    if (ripples.length > 14) return;
+    ripples.push({
+      x: Math.random() * W, y: H - Math.random() * 120,
+      r: 1, max: 22 + Math.random() * 34,
+      a: 0.14 + Math.random() * 0.08
+    });
+  }
+  let last = 0;
+  function frame(t) {
+    ctx.clearRect(0, 0, W, H);
+    ctx.lineCap = 'round';
+    for (const d of drops) {
+      ctx.beginPath();
+      ctx.strokeStyle = `rgba(140,128,150,${d.alpha})`;
+      ctx.lineWidth = d.w;
+      ctx.moveTo(d.x, d.y);
+      ctx.lineTo(d.x - d.len * d.drift, d.y + d.len);
+      ctx.stroke();
+      d.y += d.spd; d.x -= d.drift * d.spd;
+      if (d.y > H + 30) {
+        Object.assign(d, newDrop(false));
+        if (Math.random() < 0.12) spawnRipple();
+      }
+    }
+    for (let i = ripples.length - 1; i >= 0; i--) {
+      const r = ripples[i];
+      ctx.beginPath();
+      ctx.strokeStyle = `rgba(150,138,160,${r.a * (1 - r.r / r.max)})`;
+      ctx.lineWidth = 1;
+      ctx.ellipse(r.x, r.y, r.r, r.r * 0.32, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      r.r += 0.85;
+      if (r.r > r.max) ripples.splice(i, 1);
+    }
+    if (t - last > 340) { spawnRipple(); last = t; }
+    requestAnimationFrame(frame);
+  }
+  window.addEventListener('resize', resize);
+  resize();
+  requestAnimationFrame(frame);
+})();
+
+/* ============================================================
+   启动（不强制弹设置，直接进入）
+   ============================================================ */
+(async function boot() {
+  loadLocal();
+  setSyncStatus(isCloudReady() ? 'online' : 'local');
+
+  if (isCloudReady()) {
+    try {
+      setSyncStatus('syncing');
+      await giteePull();
+      saveLocal();
+      setSyncStatus('online');
+      startPolling();
+    } catch (e) {
+      console.warn(e);
+      setSyncStatus('error');
+    }
+  }
+
+  renderAll();
+})();
+</script>
+</body>
+</html>
